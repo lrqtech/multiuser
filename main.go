@@ -11,13 +11,26 @@ import (
 )
 
 const prompt = `
-Menu List
+===========
+ Menu List
+     _
+   V1.1
+===========
 1. Find a user (By id)
 2. Find a user (By username)
 3. Add a user
 4. Chang password
 5. Delete a user
 6. Exit`
+
+type Logs struct {
+	Id       int    `xorm:"pk autoincr INTEGER"`
+	Type     string `xorm:"TEXT"`
+	Log      string `xorm:"TEXT"`
+	Addtime  string `xorm:"TEXT"`
+	Uid      int    `xorm:"default '1' integer"`
+	Username string `xorm:"default 'system' TEXT"`
+}
 
 type Users struct {
 	Id        int    `xorm:"pk autoincr INTEGER"`
@@ -78,8 +91,13 @@ func Md5(str string) string {
 	return result
 }
 
+func AddLog(log string) error {
+	lt := fmt.Sprint(time.Now().Format("2006-01-02 15:04:05"))
+	_, err := engine.InsertOne(&Logs{Type: "用户管理", Log: log, Addtime: lt, Username: "system"})
+	return err
+}
+
 func main() {
-	fmt.Println("Loading......")
 	cmds := exec.Command("/bin/bash", "-c", `chmod 777 /www/server/panel/data/default.db`)
 	if err := cmds.Start(); err != nil {
 		fmt.Println("Error: ", err)
@@ -96,6 +114,8 @@ func main() {
 		return
 	}
 	fmt.Println("Welcome to CLI")
+	log := "有人启动了[面板多用户管理（非官方）]"
+	_ = AddLog(log)
 Exit:
 	for {
 		fmt.Println(prompt)
@@ -132,6 +152,8 @@ Exit:
 			fmt.Println("Please enter password for new user")
 			var passwd string
 			fmt.Scanf("%s \n", &passwd)
+			log := fmt.Sprintf("[面板多用户管理（非官方）]-有人增加用户[ %s ]", name)
+			_ = AddLog(log)
 			err = AddUser(name, Md5(passwd))
 			if err != nil {
 				fmt.Println(err)
@@ -143,6 +165,8 @@ Exit:
 			fmt.Println("Please enter new password")
 			var passwd string
 			fmt.Scanf("%s \n", &passwd)
+			log := fmt.Sprintf("[面板多用户管理（非官方）]-有人修改了用户(ID)[ %d ]的密码", id)
+			_ = AddLog(log)
 			err = ChangPasswd(id, passwd)
 			if err != nil {
 				fmt.Println(err)
@@ -154,6 +178,8 @@ Exit:
 			if id == 1 {
 				fmt.Println("You can not delete the default user")
 			} else {
+				log := fmt.Sprintf("[面板多用户管理（非官方）]-有人删除了用户(ID)[ %d ]", id)
+				_ = AddLog(log)
 				err = DelUser(id)
 				if err != nil {
 					fmt.Println(err)
