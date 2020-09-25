@@ -14,8 +14,6 @@
     go mod tidy
     go build
 
-复制代码
-
 
 运行：
 
